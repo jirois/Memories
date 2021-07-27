@@ -1,13 +1,17 @@
 package com.example.helloapplication
 
 import android.Manifest
+import android.app.Activity
 import android.app.DatePickerDialog
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.MediaStore
 import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.databinding.DataBindingUtil
@@ -17,6 +21,7 @@ import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -62,11 +67,37 @@ class AddHappyPlaces : AppCompatActivity() {
                 _, which ->
                 when(which){
                     0 -> choosePhotoFromGallery()
-                    1 -> Toast.makeText(this,
-                        "camera coming soon.", Toast.LENGTH_SHORT).show()
+                    1 -> takePhotoFromCamera()
                 }
             }
             pictureDialog.show()
+        }
+
+    }
+
+    public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent? ){
+        super.onActivityResult(requestCode, resultCode, data)
+        if (resultCode == Activity.RESULT_OK ) {
+            if (requestCode == GALLERY) {
+                if (data != null) {
+                    val contentURI = data.data
+                    try {
+                        val selectedImageBitmap =
+                            MediaStore.Images.Media.getBitmap(this.contentResolver, contentURI)
+                        binding.ivPlaceImage!!.setImageBitmap(selectedImageBitmap)
+                    } catch (e: IOException) {
+                        e.printStackTrace()
+
+                        Toast.makeText(this@AddHappyPlaces, "Fail", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } else if (requestCode == CAMERA) {
+                val thumbnail: Bitmap = data!!.extras!!.get("data") as Bitmap
+
+                binding.ivPlaceImage!!.setImageBitmap(thumbnail)
+            }
+        } else if (resultCode == Activity.RESULT_CANCELED) {
+            Log.e("Cancelled", "Cancelled")
         }
 
     }
@@ -86,9 +117,38 @@ class AddHappyPlaces : AppCompatActivity() {
             .withListener(object: MultiplePermissionsListener{
                 override fun onPermissionsChecked(report: MultiplePermissionsReport?) {
                     if (report!!.areAllPermissionsGranted()){
-                        Toast.makeText(this@AddHappyPlaces,
-                            "Storage READ/WRITE permission are granted. Now you can select an image from GALLERY or lets says phone storage.",
-                            Toast.LENGTH_SHORT).show()
+                       val galleryIntent =  Intent(
+                           Intent.ACTION_PICK,
+                           MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+                       )
+                        startActivityForResult(galleryIntent, GALLERY)
+                    }
+                }
+
+                override fun onPermissionRationaleShouldBeShown(
+                    permissions: MutableList<PermissionRequest>?,
+                    token: PermissionToken?
+                ) {
+                    showRationalDialogForPermissions()
+                }
+
+            }).onSameThread()
+            .check()
+    }
+
+    private fun takePhotoFromCamera(){
+        Dexter.withContext(this)
+            .withPermissions(
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.CAMERA
+            )
+            .withListener(object: MultiplePermissionsListener{
+                override fun onPermissionsChecked(report: MultiplePermissionsReport?) {
+                    if (report!!.areAllPermissionsGranted()){
+                        val galleryIntent =  Intent(MediaStore.ACTION_IMAGE_CAPTURE
+                        )
+                        startActivityForResult(galleryIntent, CAMERA)
                     }
                 }
 
@@ -120,5 +180,11 @@ class AddHappyPlaces : AppCompatActivity() {
             .setNegativeButton("Cancel") { dialog, _ ->
                 dialog.dismiss()
             }.show()
+    }
+
+    companion object {
+        private const val GALLERY = 1
+
+        private const val CAMERA = 2
     }
 }
