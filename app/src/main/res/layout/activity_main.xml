@@ -12,6 +12,21 @@
         android:layout_height="match_parent"
         tools:context=".activity.MainActivity">
 
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_happy_places"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            tools:visibility="gone" />
+        <TextView
+            android:id="@+id/tv_no_record_available"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="@string/no_record_available_text"
+            android:textSize="@dimen/no_record_text_size"
+            android:visibility="visible"
+            tools:visibility="visible" />
+
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fabAddHappyPlace"
             android:layout_width="wrap_content"
