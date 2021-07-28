@@ -1,9 +1,10 @@
-package com.example.helloapplication
+package com.example.helloapplication.activity
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.databinding.DataBindingUtil
+import com.example.helloapplication.R
 import com.example.helloapplication.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
