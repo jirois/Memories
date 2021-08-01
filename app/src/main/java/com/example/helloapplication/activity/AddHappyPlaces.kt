@@ -38,6 +38,8 @@ class AddHappyPlaces : AppCompatActivity() {
     private var cal = Calendar.getInstance()
     private lateinit var dateSetListener: DatePickerDialog.OnDateSetListener
 
+    private var mHappyPlaceDetail: HappyPlaceModel? = null
+
     //  Now as per our Data Model Class we need some of the values to
     //  be passed so let us create that global which will be used later on.
     // START
@@ -56,6 +58,12 @@ class AddHappyPlaces : AppCompatActivity() {
             onBackPressed()
         }
 
+        if (intent.hasExtra(MainActivity.EXTRA_PLACE_DETAILS)){
+            mHappyPlaceDetail = intent.getSerializableExtra(MainActivity.EXTRA_PLACE_DETAILS) as HappyPlaceModel
+
+        }
+
+
         dateSetListener = DatePickerDialog.OnDateSetListener { _, year, month, dayOfMonth ->
             cal.set(Calendar.DAY_OF_YEAR, year)
             cal.set(Calendar.MONTH, month)
@@ -65,6 +73,23 @@ class AddHappyPlaces : AppCompatActivity() {
 
         }
         updateDateInView()
+
+        if (mHappyPlaceDetail != null) {
+            supportActionBar?.title = "Edit Happy Memories"
+
+            binding.etTitle.setText(mHappyPlaceDetail!!.title)
+            binding.etDescription.setText(mHappyPlaceDetail!!.description)
+            binding.etDate.setText(mHappyPlaceDetail!!.date)
+            binding.etLocation.setText(mHappyPlaceDetail!!.location)
+            mLatitude = mHappyPlaceDetail!!.latitude
+            mLongitude = mHappyPlaceDetail!!.longitude
+
+            saveImageToInternalStorage = Uri.parse(mHappyPlaceDetail!!.image)
+
+            binding.ivPlaceImage.setImageURI(saveImageToInternalStorage)
+
+            binding.btnSave.text = "UPDATE"
+        }
 
 
         binding.etDate.setOnClickListener {
@@ -109,25 +134,35 @@ class AddHappyPlaces : AppCompatActivity() {
                         Toast.makeText(this, "Please enter title", Toast.LENGTH_SHORT).show()
 
                 } else -> {
-                    val happyPlaceModel = HappyPlaceModel(
-                        0,
-                        binding.etTitle.text.toString(),
-                        saveImageToInternalStorage.toString(),
-                        binding.etDescription.text.toString(),
-                        binding.etDate.text.toString(),
-                        binding.etLocation.text.toString(),
-                        mLatitude,
-                        mLongitude
-                    )
+                val happyPlaceModel = HappyPlaceModel(
+                    // Changing the id if it is for edit.
+                    if (mHappyPlaceDetail == null) 0 else mHappyPlaceDetail!!.id,
+                    binding.etTitle.text.toString(),
+                    saveImageToInternalStorage.toString(),
+                    binding.etDescription.text.toString(),
+                    binding.etDate.text.toString(),
+                    binding.etLocation.text.toString(),
+                    mLatitude,
+                    mLongitude
+                )
 
                 //Initialize the database handler
                 val dbHandler = DatabaseHandler(this)
 
-                val addHappyPlaces = dbHandler.addHappyPlace(happyPlaceModel)
+                if (mHappyPlaceDetail == null) {
+                    val addHappyPlaces = dbHandler.addHappyPlace(happyPlaceModel)
 
-                if (addHappyPlaces > 0) {
-                  setResult(Activity.RESULT_OK)
-                    finish()
+                    if (addHappyPlaces > 0) {
+                        setResult(Activity.RESULT_OK)
+                        finish()
+                    }
+                }else {
+                    val updateHappyPlace = dbHandler.updateHappyPlace(happyPlaceModel)
+
+                    if (updateHappyPlace > 0) {
+                        setResult(Activity.RESULT_OK)
+                        finish()
+                    }
                 }
             }
             }
