@@ -47,6 +47,11 @@ dependencies {
     // dexter permission
     implementation 'com.karumi:dexter:6.2.3'
 
+    //Rounded image
+    implementation 'de.hdodenhof:circleimageview:3.1.0'
+
+
+
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 }
